@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Transcriptor - Transcripción de Voz en Tiempo Real</title>
+    <!-- Carga de Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #667eea;
+            min-height: 100vh;
+        }
+        
+        .navbar {
+            backdrop-filter: blur(20px);
+            background: rgba(102, 126, 234, 0.95);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .ad-space {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .ad-space:hover {
+            background: rgba(255, 255, 255, 0.25);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+        
+        .glass-card {
+            background: #ffffff;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+        
+        .ai-gradient-text {
+            color: #667eea;
+        }
+        
+        .recording {
+            animation: pulse-ring 1.5s infinite;
+        }
+        
+        @keyframes pulse-ring {
+            0% { 
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7),
+                            0 0 0 0 rgba(239, 68, 68, 0.4);
+            }
+            50% { 
+                box-shadow: 0 0 0 10px rgba(239, 68, 68, 0),
+                            0 0 0 20px rgba(239, 68, 68, 0);
+            }
+            100% { 
+                box-shadow: 0 0 0 0 rgba(239, 68, 68, 0),
+                            0 0 0 0 rgba(239, 68, 68, 0);
+            }
+        }
+        
+        .glow-effect {
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-primary {
+            background: #667eea;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        
+        /* Responsive adjustments */
+        @media (max-width: 640px) {
+            .navbar {
+                padding: 0.75rem 1rem;
+            }
+            
+            .glass-card {
+                padding: 1.5rem;
+                margin: 0.5rem;
+            }
+            
+            #transcription-text {
+                height: 250px;
+                padding: 1rem;
+                font-size: 1rem;
+            }
+        }
+        
+        @media (min-width: 641px) and (max-width: 1024px) {
+            #transcription-text {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Barra de Navegación -->
+    <nav class="navbar fixed top-0 left-0 right-0 z-50 px-3 sm:px-4 md:px-8 py-3 sm:py-4">
+        <div class="max-w-7xl mx-auto flex items-center justify-between flex-wrap gap-2">
+            <!-- Logo y Título -->
+            <div class="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+                <div class="w-8 h-8 sm:w-10 sm:h-10 bg-white rounded-lg flex items-center justify-center glow-effect">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-6 sm:w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-white font-['Space_Grotesk']">AI Transcriptor</h1>
+                    <p class="text-xs text-white/70 hidden sm:block">Powered by AI</p>
+                </div>
+            </div>
+            
+            <!-- Espacio para Publicidad -->
+            <div class="ad-space flex-1 max-w-md mx-2 sm:mx-4 hidden lg:flex items-center justify-center rounded-lg px-3 sm:px-4 py-2 h-10 sm:h-12 min-w-0">
+                <p class="text-white/60 text-xs sm:text-sm text-center truncate w-full">
+                    <!-- Aquí puedes agregar tu código de publicidad -->
+                    <span class="text-white/40">Espacio Publicitario</span>
+                </p>
+            </div>
+            
+            <!-- Menú de Navegación (Opcional) -->
+            <div class="flex items-center space-x-2 sm:space-x-4 flex-shrink-0">
+                <button class="text-white/80 hover:text-white transition-colors text-xs sm:text-sm font-medium hidden lg:block">
+                    Inicio
+                </button>
+                <button class="text-white/80 hover:text-white transition-colors text-xs sm:text-sm font-medium hidden lg:block">
+                    Acerca de
+                </button>
+                <button class="px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 hover:bg-white/30 text-white rounded-lg text-xs sm:text-sm font-medium transition-all">
+                    Contacto
+                </button>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Contenedor Principal -->
+    <div class="min-h-screen pt-20 sm:pt-24 pb-6 sm:pb-8 px-3 sm:px-4 md:px-8 flex items-center justify-center relative overflow-hidden">
+        <div class="w-full max-w-4xl glass-card rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-10 relative z-10">
+
+            <!-- Encabezado -->
+            <div class="text-center mb-6 sm:mb-8">
+                <div class="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-indigo-600 rounded-xl sm:rounded-2xl mb-3 sm:mb-4 glow-effect">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 sm:h-10 sm:w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                    </svg>
+                </div>
+                <h1 class="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-2 sm:mb-3 font-['Space_Grotesk']">
+                    <span class="ai-gradient-text">Transcripción de Voz</span>
+                </h1>
+                <p class="text-gray-600 text-sm sm:text-base md:text-lg max-w-2xl mx-auto px-2">
+                    Tecnología de IA avanzada para transcribir tu voz en tiempo real. 
+                    <span class="font-semibold text-indigo-600">Di "terminar"</span> para detener automáticamente.
+                </p>
+            </div>
+
+            <!-- Área de Estado y Mensajes -->
+            <div id="status-box" class="mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-300">
+                <div class="flex items-center space-x-2">
+                    <div id="status-indicator" class="w-2 h-2 rounded-full bg-gray-400 flex-shrink-0"></div>
+                    <span id="status-text" class="text-gray-700 break-words">Pulsa 'Iniciar Grabación' para comenzar.</span>
+                </div>
+            </div>
+
+            <!-- Área de Texto de Transcripción -->
+            <div class="relative mb-4 sm:mb-6">
+                <textarea id="transcription-text"
+                          class="w-full h-64 sm:h-80 p-4 sm:p-6 border-2 border-gray-200 rounded-lg sm:rounded-xl focus:border-indigo-500 focus:ring-4 focus:ring-indigo-200 focus:ring-opacity-50 text-gray-800 text-base sm:text-lg resize-none shadow-inner bg-white transition-all duration-300"
+                          placeholder="El texto de la transcripción aparecerá aquí en tiempo real..."
+                          aria-label="Área de transcripción"></textarea>
+                <div class="absolute top-3 right-3 sm:top-4 sm:right-4 flex items-center space-x-1 sm:space-x-2 text-xs text-gray-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 sm:h-4 sm:w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                    </svg>
+                    <span class="hidden sm:inline">IA en Tiempo Real</span>
+                </div>
+            </div>
+
+            <!-- Contenedor de Botones -->
+            <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+                
+                <!-- Botón de Iniciar/Detener -->
+                <button id="start-stop-btn"
+                        class="flex-1 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-white font-semibold rounded-lg sm:rounded-xl shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 btn-primary">
+                    <span class="flex items-center justify-center space-x-2">
+                        <svg id="mic-icon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 sm:h-6 sm:w-6" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+                            <line x1="12" y1="19" x2="12" y2="22"/>
+                        </svg>
+                        <span id="button-text" class="text-base sm:text-lg">Iniciar Grabación</span>
+                    </span>
+                </button>
+
+                <!-- Botón de Guardar -->
+                <button id="save-btn"
+                        class="w-full sm:w-auto sm:min-w-[140px] md:min-w-[180px] px-4 sm:px-6 md:px-8 py-3 sm:py-4 bg-gray-200 text-gray-700 font-semibold rounded-lg sm:rounded-xl shadow-lg transition-all duration-300 transform hover:bg-gray-300 hover:shadow-xl hover:-translate-y-1 focus:outline-none focus:ring-4 focus:ring-gray-300/50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:transform-none"
+                        disabled>
+                    <span class="flex items-center justify-center space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                        </svg>
+                        <span class="text-sm sm:text-base">Guardar (.txt)</span>
+                    </span>
+                </button>
+            </div>
+
+            <!-- Información Adicional -->
+            <div class="mt-6 sm:mt-8 p-3 sm:p-4 bg-indigo-50 rounded-lg sm:rounded-xl border border-indigo-100">
+                <p class="text-xs sm:text-sm text-gray-600 text-center flex flex-col sm:flex-row items-center justify-center space-y-1 sm:space-y-0 sm:space-x-2">
+                    <span class="flex items-center space-x-1 sm:space-x-2">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-indigo-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-center">Requiere Google Chrome o navegador compatible con reconocimiento de voz</span>
+                    </span>
+                </p>
+            </div>
+        </div>
+        
+        <!-- Espacio Publicitario Móvil (solo visible en pantallas grandes) -->
+        <div class="ad-space w-full max-w-4xl mx-auto mt-6 sm:mt-8 hidden lg:flex items-center justify-center rounded-lg sm:rounded-xl px-3 sm:px-4 py-4 sm:py-6 min-h-[80px] sm:min-h-[100px]">
+            <p class="text-white/60 text-xs sm:text-sm text-center">
+                <!-- Aquí puedes agregar tu código de publicidad para pantallas grandes -->
+                <span class="text-white/40">Espacio Publicitario</span>
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // === ELEMENTOS DEL DOM ===
+        const startStopBtn = document.getElementById('start-stop-btn');
+        const transcriptionTextarea = document.getElementById('transcription-text');
+        const statusBox = document.getElementById('status-box');
+        const statusText = document.getElementById('status-text');
+        const statusIndicator = document.getElementById('status-indicator');
+        const micIcon = document.getElementById('mic-icon');
+        const buttonText = document.getElementById('button-text');
+        const saveBtn = document.getElementById('save-btn');
+
+        // === API DE RECONOCIMIENTO DE VOZ ===
+        // Se usa webkitSpeechRecognition por compatibilidad más amplia en navegadores basados en Chromium
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+        let recognition;
+        let isRecording = false;
+        let finalTranscript = '';
+        let stoppedByCommand = false; // Nuevo estado para indicar si se detuvo por comando de voz
+
+        // Función para actualizar la interfaz de estado
+        function updateStatus(message, isError = false, isRecordingState = false) {
+            statusText.textContent = message;
+            statusBox.className = 'mb-4 sm:mb-6 p-3 sm:p-4 rounded-lg sm:rounded-xl text-xs sm:text-sm font-medium transition-all duration-300';
+            statusText.className = '';
+            
+            if (isRecordingState) {
+                statusBox.classList.add('bg-red-50', 'border-2', 'border-red-200');
+                statusText.classList.add('text-red-700');
+                statusIndicator.className = 'w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0';
+                startStopBtn.className = 'flex-1 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-white font-semibold rounded-lg sm:rounded-xl shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 bg-red-600 hover:bg-red-700 recording';
+            } else if (isError) {
+                statusBox.classList.add('bg-yellow-50', 'border-2', 'border-yellow-200');
+                statusText.classList.add('text-yellow-700');
+                statusIndicator.className = 'w-2 h-2 rounded-full bg-yellow-500 flex-shrink-0';
+                startStopBtn.className = 'flex-1 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-white font-semibold rounded-lg sm:rounded-xl shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 btn-primary';
+            } else {
+                // Estado normal (verde) o inicial (gris)
+                if (message.includes('Pulsa') || message.includes('comenzar')) {
+                    statusBox.classList.add('bg-gray-50', 'border-2', 'border-gray-200');
+                    statusText.classList.add('text-gray-700');
+                    statusIndicator.className = 'w-2 h-2 rounded-full bg-gray-400 flex-shrink-0';
+                } else {
+                    statusBox.classList.add('bg-green-50', 'border-2', 'border-green-200');
+                    statusText.classList.add('text-green-700');
+                    statusIndicator.className = 'w-2 h-2 rounded-full bg-green-500 flex-shrink-0';
+                }
+                startStopBtn.className = 'flex-1 px-4 sm:px-6 md:px-8 py-3 sm:py-4 text-white font-semibold rounded-lg sm:rounded-xl shadow-xl transition-all duration-300 transform hover:scale-[1.02] active:scale-[0.98] focus:outline-none focus:ring-4 btn-primary';
+            }
+        }
+
+        // Función para inicializar y configurar el reconocimiento
+        function initializeRecognition() {
+            if (!SpeechRecognition) {
+                updateStatus('ERROR: El reconocimiento de voz no es compatible con tu navegador. Prueba con Google Chrome.', true);
+                startStopBtn.disabled = true;
+                return;
+            }
+
+            recognition = new SpeechRecognition();
+            
+            // Permite resultados intermedios (transcripción en tiempo real)
+            recognition.interimResults = true; 
+            
+            // Define el idioma (Español de España)
+            recognition.lang = 'es-ES'; 
+            
+            // Asegura que continúe escuchando incluso después de pausas cortas
+            recognition.continuous = true; 
+            
+            // === MANEJADORES DE EVENTOS ===
+
+            recognition.onstart = () => {
+                isRecording = true;
+                buttonText.textContent = 'Detener Grabación';
+                saveBtn.disabled = true;
+                updateStatus('Grabando... ¡Di algo o di "terminar" para detener! 🔴', false, true);
+                micIcon.innerHTML = `<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" y1="19" x2="12" y2="22"/>`;
+            };
+
+            recognition.onend = () => {
+                // Solo detiene la grabación si no fue manual (o si el comando de voz lo hizo)
+                if (isRecording || stoppedByCommand) {
+                    isRecording = false;
+                    buttonText.textContent = 'Iniciar Grabación';
+                    saveBtn.disabled = false;
+                    
+                    if (stoppedByCommand) {
+                        updateStatus('Comando "terminar" detectado. Grabación finalizada automáticamente. ✅', false, false);
+                        stoppedByCommand = false; // Reiniciar el estado
+                    } else {
+                        updateStatus('Grabación detenida. Resultado final disponible.', false, false);
+                    }
+                }
+            };
+            
+            recognition.onerror = (event) => {
+                console.error('Error de Reconocimiento de Voz:', event.error);
+                let errorMessage = `Error: ${event.error}.`;
+                if (event.error === 'not-allowed') {
+                    errorMessage = 'ERROR: Se necesita permiso de micrófono. Por favor, acepta la solicitud.';
+                } else if (event.error === 'network') {
+                    errorMessage = 'ERROR: Problema de red. Asegúrate de tener conexión a internet.';
+                }
+                updateStatus(errorMessage, true);
+                isRecording = false;
+                buttonText.textContent = 'Iniciar Grabación';
+                saveBtn.disabled = finalTranscript.length === 0;
+                startStopBtn.classList.remove('recording');
+                try {
+                    recognition.stop();
+                } catch (e) { /* Ya detenido */ }
+            };
+
+            recognition.onresult = (event) => {
+                let interimTranscript = '';
+                let newFinalTranscript = '';
+                let shouldStop = false;
+
+                // Itera sobre los resultados
+                for (let i = event.resultIndex; i < event.results.length; ++i) {
+                    const transcript = event.results[i][0].transcript;
+                    
+                    if (event.results[i].isFinal) {
+                        newFinalTranscript += transcript + '. '; // Añade un punto al final de las frases
+                        
+                        // *** Lógica para detectar el comando de parada ***
+                        if (transcript.toLowerCase().includes("terminar")) {
+                            shouldStop = true;
+                        }
+                        // ************************************************
+
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+                
+                // 1. Actualiza la transcripción final acumulada
+                finalTranscript += newFinalTranscript;
+                
+                // 2. Muestra la transcripción final acumulada + el resultado intermedio (en tiempo real)
+                transcriptionTextarea.value = finalTranscript + interimTranscript;
+
+                // 3. Detener la grabación si se detectó el comando
+                if (shouldStop) {
+                    stoppedByCommand = true; // Establecer el estado antes de llamar a stop
+                    recognition.stop();
+                }
+            };
+
+        }
+
+        // === LÓGICA DE BOTONES ===
+
+        startStopBtn.addEventListener('click', () => {
+            if (isRecording) {
+                // Detener la grabación manualmente
+                recognition.stop();
+                isRecording = false;
+                buttonText.textContent = 'Iniciar Grabación';
+                saveBtn.disabled = finalTranscript.length === 0;
+                updateStatus('Grabación detenida por el usuario. ✅', false, false);
+                startStopBtn.classList.remove('recording');
+            } else {
+                // Iniciar la grabación
+                // Reinicia la variable de transcripción final para una nueva sesión
+                finalTranscript = transcriptionTextarea.value; 
+                stoppedByCommand = false; // Resetear el estado al iniciar
+                try {
+                    recognition.start();
+                } catch (e) {
+                    console.error("No se pudo iniciar el reconocimiento:", e);
+                    updateStatus('El reconocimiento ya está activo o hubo un error al iniciarlo.', true);
+                }
+            }
+        });
+        
+        saveBtn.addEventListener('click', () => {
+            const textToSave = transcriptionTextarea.value;
+            if (textToSave.trim() === "") {
+                updateStatus("No hay texto para guardar.", true);
+                return;
+            }
+
+            // Crear un objeto Blob con el contenido del texto
+            const blob = new Blob([textToSave], { type: 'text/plain;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            
+            // Crear un enlace temporal para la descarga
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `transcripcion_${new Date().toISOString().slice(0, 10)}.txt`;
+            
+            // Simular el clic para iniciar la descarga
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            
+            URL.revokeObjectURL(url); // Limpiar el objeto URL
+            
+            updateStatus('¡Texto guardado correctamente en tu disco! 💾', false);
+        });
+
+        // Inicializar el reconocimiento al cargar la página
+        initializeRecognition();
+
+    </script>
+</body>
+</html>
