@@ -26,17 +26,6 @@
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
         
-        .ad-space {
-            background: rgba(255, 255, 255, 0.2);
-            border: 2px dashed rgba(255, 255, 255, 0.4);
-            transition: all 0.3s ease;
-        }
-        
-        .ad-space:hover {
-            background: rgba(255, 255, 255, 0.25);
-            border-color: rgba(255, 255, 255, 0.6);
-        }
-        
         .glass-card {
             background: #ffffff;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
@@ -104,7 +93,29 @@
                 height: 300px;
             }
         }
+        
+        /* Protección básica - Desactivar selección en elementos críticos */
+        .glass-card, .navbar {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+        
+        /* Permitir selección solo en el textarea */
+        #transcription-text {
+            -webkit-user-select: text;
+            -moz-user-select: text;
+            -ms-user-select: text;
+            user-select: text;
+        }
     </style>
+    <noscript>
+        <style>
+            body { display: none !important; }
+        </style>
+        <h1>JavaScript es requerido para usar esta aplicación.</h1>
+    </noscript>
 </head>
 <body class="min-h-screen">
     <!-- Barra de Navegación -->
@@ -121,14 +132,6 @@
                     <h1 class="text-lg sm:text-xl md:text-2xl font-bold text-white font-['Space_Grotesk']">AI Transcriptor</h1>
                     <p class="text-xs text-white/70 hidden sm:block">Powered by AI</p>
                 </div>
-            </div>
-            
-            <!-- Espacio para Publicidad -->
-            <div class="ad-space flex-1 max-w-md mx-2 sm:mx-4 hidden lg:flex items-center justify-center rounded-lg px-3 sm:px-4 py-2 h-10 sm:h-12 min-w-0">
-                <p class="text-white/60 text-xs sm:text-sm text-center truncate w-full">
-                    <!-- Aquí puedes agregar tu código de publicidad -->
-                    <span class="text-white/40">Espacio Publicitario</span>
-                </p>
             </div>
             
             <!-- Menú de Navegación (Opcional) -->
@@ -229,17 +232,91 @@
                 </p>
             </div>
         </div>
-        
-        <!-- Espacio Publicitario Móvil (solo visible en pantallas grandes) -->
-        <div class="ad-space w-full max-w-4xl mx-auto mt-6 sm:mt-8 hidden lg:flex items-center justify-center rounded-lg sm:rounded-xl px-3 sm:px-4 py-4 sm:py-6 min-h-[80px] sm:min-h-[100px]">
-            <p class="text-white/60 text-xs sm:text-sm text-center">
-                <!-- Aquí puedes agregar tu código de publicidad para pantallas grandes -->
-                <span class="text-white/40">Espacio Publicitario</span>
-            </p>
-        </div>
     </div>
 
     <script>
+        // === PROTECCIÓN BÁSICA (Limitada - El código del cliente siempre es visible) ===
+        // Desactivar clic derecho
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
+        // Desactivar atajos de teclado comunes
+        document.addEventListener('keydown', function(e) {
+            // F12 - DevTools
+            if (e.key === 'F12') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+I - DevTools
+            if (e.ctrlKey && e.shiftKey && e.key === 'I') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+J - Console
+            if (e.ctrlKey && e.shiftKey && e.key === 'J') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+U - Ver código fuente
+            if (e.ctrlKey && e.key === 'u') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+S - Guardar página
+            if (e.ctrlKey && e.key === 's') {
+                e.preventDefault();
+                return false;
+            }
+            // Ctrl+Shift+C - Inspector
+            if (e.ctrlKey && e.shiftKey && e.key === 'C') {
+                e.preventDefault();
+                return false;
+            }
+        });
+
+        // Desactivar selección de texto (opcional - puede ser molesto para usuarios)
+        // Descomenta las siguientes líneas si quieres desactivar la selección:
+        /*
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        */
+
+        // Detectar apertura de DevTools (método básico)
+        let devtools = {open: false};
+        const element = new Image();
+        Object.defineProperty(element, 'id', {
+            get: function() {
+                devtools.open = true;
+                console.clear();
+                console.log('%c⚠️ ACCESO RESTRINGIDO ⚠️', 'color: red; font-size: 30px; font-weight: bold; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);');
+                console.log('%cEste código está protegido por derechos de autor.', 'color: red; font-size: 16px; font-weight: bold;');
+                console.log('%cEl acceso no autorizado, copia o modificación puede violar términos de uso y leyes de propiedad intelectual.', 'color: red; font-size: 14px;');
+                console.log('%cPor favor, cierra las herramientas de desarrollo.', 'color: orange; font-size: 14px;');
+            }
+        });
+        
+        // Verificar periódicamente si DevTools está abierto
+        setInterval(function() {
+            devtools.open = false;
+            console.log(element);
+            if (devtools.open) {
+                // DevTools detectado - ya se mostró el mensaje
+            }
+        }, 1000);
+        
+        // Bloquear arrastrar y soltar archivos
+        window.addEventListener('dragover', function(e) {
+            e.preventDefault();
+        }, false);
+        
+        window.addEventListener('drop', function(e) {
+            e.preventDefault();
+        }, false);
+
         // === ELEMENTOS DEL DOM ===
         const startStopBtn = document.getElementById('start-stop-btn');
         const transcriptionTextarea = document.getElementById('transcription-text');
